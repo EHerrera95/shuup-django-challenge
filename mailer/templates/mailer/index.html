@@ -1,0 +1,48 @@
+{% extends 'mailer/layout.html' %}
+{% load static %}
+
+{% block content%}
+	<div style="width:1020px; margin: 0 auto; border:1px solid blue;">
+	<table width="1020">
+		{% if company_list.has_other_pages %}
+  		<nav aria-label="Page navigation conatiner"></nav>
+			<ul class="pagination justify-content-center">
+				{% if company_list.has_previous %}
+				<li><a href="?page={{ company_list.previous_page_number }}" class="page-link">&laquo; PREV </a></li>
+				{% endif %}
+				{% if company_list.has_next %}
+				<li><a href="?page={{ company_list.next_page_number }}" class="page-link"> NEXT &raquo;</a></li>
+				{% endif %}
+			</ul>
+		</nav>
+	{% endif %}
+	<tr>
+		<th>Name</th>
+		<th>Order Count</th>
+		<th>Order Sum</th>
+		<th>Select</th>
+	</tr>
+		{% for company in company_list %}
+		<tr>
+			<td>{{ company.name }}</td>
+			{% comment %} Optimize these {% endcomment %}
+			<td>{{ company.get_order_count }}</td>
+			<td>{{ company.get_order_sum|floatformat:2 }}</td>
+			<td><input type="checkbox" name="select{{company.pk}}" id=""></td>
+		</tr>
+		{% comment %} Optimize these   {% endcomment %}
+			{% for contact in company.contacts.all %}
+			<tr>
+				<td>&nbsp;</td>
+				<td>{{ contact.first_name }} {{ contact.last_name }}</td>
+				{% comment %} Optimize these  {% endcomment %}
+				<td>Orders: {{ contact.get_order_count }}</td>
+				<td></td>
+			</tr>
+			{% endfor %}
+		{% endfor %}
+	</table>
+	</div>
+
+
+{% endblock %}
