@@ -1,9 +1,12 @@
 {% extends 'mailer/layout.html' %}
 {% load static %}
+{% comment %} Added mailer/layout.html to add styling to multiple pages in the future {% endcomment %}
+
 
 {% block content%}
 	<div style="width:1020px; margin: 0 auto; border:1px solid blue;">
 	<table width="1020">
+	{% comment %} Pagination setup fairly similiar to class-based views, just minor changes in loops {% endcomment %}
 		{% if company_list.has_other_pages %}
   		<nav aria-label="Page navigation conatiner"></nav>
 			<ul class="pagination justify-content-center">
@@ -25,20 +28,24 @@
 		{% for company in company_list %}
 		<tr>
 			<td>{{ company.name }}</td>
-			{% comment %} Optimize these {% endcomment %}
 			<td>{{ company.get_order_count }}</td>
-			<td>{{ company.get_order_sum|floatformat:2 }}</td>
+			<td>{{company.order_total|floatformat:2 | default:'0.00' }}</td>
+			{% comment %} Removed company.get_order_sum method and using annonation from company_list queryset to reduce database queries in a loop {% endcomment %}
+			{% comment %} <td>{{ company.get_order_sum|floatformat:2 }}</td> {% endcomment %}
 			<td><input type="checkbox" name="select{{company.pk}}" id=""></td>
 		</tr>
-		{% comment %} Optimize these   {% endcomment %}
-			{% for contact in company.contacts.all %}
-			<tr>
-				<td>&nbsp;</td>
-				<td>{{ contact.first_name }} {{ contact.last_name }}</td>
-				{% comment %} Optimize these  {% endcomment %}
-				<td>Orders: {{ contact.get_order_count }}</td>
-				<td></td>
-			</tr>
+			{% comment %} Added contact_list to template to reduce SQL queries with calling company.contact.all() in a loop {% endcomment %}
+			{% for contact in contact_list %}
+				{% comment %} To make sure contact information is for respective company names  {% endcomment %}
+		 		{% if contact.company.name == company.name %}
+				<tr>
+					<td>&nbsp;</td>
+					<td>{{ contact.first_name }} {{ contact.last_name }}</td>
+					 {% comment %} Removed contact.get_order_count method and just re-using company method for optimization {% endcomment %}
+					<td>Orders: {{ company.get_order_count }}</td>
+					<td></td>
+				</tr>
+				{% endif %}
 			{% endfor %}
 		{% endfor %}
 	</table>

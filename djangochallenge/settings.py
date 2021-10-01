@@ -52,6 +52,8 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'djangochallenge.wsgi.application'
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
 
 DATABASES = {
     'default': {

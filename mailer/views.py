@@ -1,41 +1,39 @@
 #-*- coding: utf-8 -*-
-# from django.core import paginator
-from django.core.paginator import Page, Paginator, PageNotAnInteger, EmptyPage
-from django.shortcuts import render
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.shortcuts import  render
+from django.db.models import Sum
+from django.db.models.functions import Coalesce
 # Create your views here.
-from django.views.generic import ListView
+# from django.views.generic import ListView
 
 
 from mailer.models import Company, Contact, Order
 
+# As mentioned in the urls.py, I just prefer to use function based views over class views
 
 # class IndexView(ListView):
 #     template_name = "mailer/index.html"
 #     model = Company
-#     context_object_name ='company_list'
-    
-#     company_dict={}
-#     temp_dict={}
-#     all_companies = Company.objects.all()
-#     for a in all_companies:
-#         temp_dict = {'name' : a.name, 'order_count' : a.get_order_count(), 'order_sum': a.get_order_sum()}
-#         print(temp_dict)
-
 #     paginate_by = 100
 
-#     # def get_context_data(self, *args, **kwargs):
-#     #     context = super(IndexView, self).get_context_data(*args, **kwargs)
-#     #     context['company_list'] = temp_dict
-
 def index(request):
-    company_list = Company.objects.all()
+
+    #Company and Contact Query Sets using prefetch and selected related to optimize SQL queries on template
+    company_list = Company.objects.prefetch_related('contacts','orders').annotate(order_total=Sum('orders__total')) #Replacing get_order_sum and passing to template as order_total to reduce SQL queries
+    contact_list = Contact.objects.select_related('company') 
+    
+    #Pagination in the function based view
     paginator = Paginator(company_list, 100)
-    page=request.GET.get('page')
+    page=request.GET.get('page')  
     try: 
         company_list = paginator.page(page)
     except PageNotAnInteger:
         company_list = paginator.page(1)
     except EmptyPage:
         company_list = paginator.page(paginator.num_pages)
-    
-    return render(request, 'mailer/index.html', {'page': page, 'company_list': company_list})
+
+    return render(request, 'mailer/index.html', {
+        'page': page, 
+        'company_list': company_list,
+        'contact_list': contact_list,
+        })
